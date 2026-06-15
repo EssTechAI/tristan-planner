@@ -4,6 +4,8 @@ import TopBar from './components/TopBar';
 import TabBar from './components/TabBar';
 import MonthlyOverview from './views/MonthlyOverview';
 import WeeklyPlanner from './views/WeeklyPlanner';
+import Login from './views/Login';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { getTodayInfo, getDatesForWeek } from './utils/calendarUtils';
 
 function CurrentWeekRedirect() {
@@ -67,7 +69,12 @@ function WeekRoute() {
   );
 }
 
-export default function App() {
+function AuthGate() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen bg-white" />;
+  if (!user) return <Login />;
+
   return (
     <BrowserRouter>
       <Routes>
@@ -76,5 +83,13 @@ export default function App() {
         <Route path="/week/:weekParam" element={<WeekRoute />} />
       </Routes>
     </BrowserRouter>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }

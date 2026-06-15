@@ -1,10 +1,12 @@
 import { MONTH_NAMES } from '../utils/calendarUtils';
+import { useAuth } from '../context/AuthContext';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function TopBar({ year, monthIndex, weekNumber, weekYear, view }) {
   const now = new Date();
   const todayStr = `${DOW[now.getDay()]}, ${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  const { signOut } = useAuth();
 
   return (
     <div className="bg-[#1a1a2e] text-white px-5 flex items-center gap-4 h-12 text-[13px] flex-shrink-0">
@@ -30,7 +32,15 @@ export default function TopBar({ year, monthIndex, weekNumber, weekYear, view })
         </>
       )}
 
-      <div className="ml-auto text-[12px] opacity-60">{todayStr}</div>
+      <div className="ml-auto flex items-center gap-4">
+        <span className="text-[12px] opacity-60">{todayStr}</span>
+        <button
+          onClick={signOut}
+          className="text-[12px] opacity-50 hover:opacity-100 transition-opacity bg-transparent border-0 text-white cursor-pointer p-0"
+        >
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }
