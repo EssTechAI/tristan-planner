@@ -5,6 +5,17 @@ function debounced(key, fn) {
   timers[key] = setTimeout(fn, 300);
 }
 
+function defaultTodo() {
+  return {
+    id: crypto.randomUUID(),
+    text: '',
+    done: false,
+    status: 'not_started',
+    description: '',
+    subtasks: [],
+  };
+}
+
 function defaultMonthData() {
   return {
     importantDates: ['', '', '', '', '', ''],
@@ -17,7 +28,7 @@ function defaultMonthData() {
 function defaultWeekData() {
   return {
     priorities: ['', '', ''],
-    todos: Array.from({ length: 3 }, () => ({ id: crypto.randomUUID(), text: '', done: false })),
+    todos: Array.from({ length: 3 }, defaultTodo),
     reminders: ['', '', '', ''],
     mealPlan: { MON: '', TUE: '', WED: '', THU: '', FRI: '', SAT: '', SUN: '' },
     dayNotes: { MON: '', TUE: '', WED: '', THU: '', FRI: '', SAT: '', SUN: '' },
@@ -30,7 +41,6 @@ export function loadMonthData(year, monthIndex) {
     const raw = localStorage.getItem(`month_${year}_${monthIndex}`);
     if (!raw) return defaultMonthData();
     const data = JSON.parse(raw);
-    // migrate: goals as strings → objects
     if (data.goals && typeof data.goals[0] === 'string') {
       data.goals = data.goals.map(g => ({ text: g, done: false }));
     }
@@ -49,7 +59,17 @@ export function loadWeekData(weekNumber, year) {
   try {
     const raw = localStorage.getItem(`week_${year}_${weekNumber}`);
     if (!raw) return defaultWeekData();
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    // Migrate todos to extended format
+    if (data.todos) {
+      data.todos = data.todos.map(t => ({
+        status: 'not_started',
+        description: '',
+        subtasks: [],
+        ...t,
+      }));
+    }
+    return data;
   } catch {
     return defaultWeekData();
   }

@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SectionCard from '../components/SectionCard';
-import LineInput from '../components/LineInput';
 import MiniCalendar from '../components/MiniCalendar';
 import { loadMonthData, saveMonthData } from '../utils/storage';
 import { MONTH_NAMES } from '../utils/calendarUtils';
 
 export default function MonthlyOverview({ year, monthIndex }) {
   const [data, setData] = useState(() => loadMonthData(year, monthIndex));
+
+  const dateRefs = useRef([]);
+  const goalRefs = useRef([]);
+  const birthdayRefs = useRef([]);
 
   useEffect(() => {
     setData(loadMonthData(year, monthIndex));
@@ -17,21 +20,25 @@ export default function MonthlyOverview({ year, monthIndex }) {
     saveMonthData(year, monthIndex, next);
   };
 
-  const setImportantDate = (i, val) => {
-    const importantDates = [...data.importantDates];
-    importantDates[i] = val;
+  // --- Important Dates ---
+  const addDate = () => {
+    const importantDates = [...data.importantDates, ''];
     update({ ...data, importantDates });
+    return importantDates.length - 1;
   };
 
-  const setGoal = (i, field, val) => {
-    const goals = data.goals.map((g, gi) => gi === i ? { ...g, [field]: val } : g);
+  // --- Goals ---
+  const addGoal = () => {
+    const goals = [...data.goals, { text: '', done: false }];
     update({ ...data, goals });
+    return goals.length - 1;
   };
 
-  const setBirthday = (i, val) => {
-    const birthdays = [...data.birthdays];
-    birthdays[i] = val;
+  // --- Birthdays ---
+  const addBirthday = () => {
+    const birthdays = [...data.birthdays, ''];
     update({ ...data, birthdays });
+    return birthdays.length - 1;
   };
 
   return (
@@ -48,17 +55,43 @@ export default function MonthlyOverview({ year, monthIndex }) {
 
       {/* Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <SectionCard title="📅 Important Dates">
+        <SectionCard title="📅 Important Dates" showHint>
           {data.importantDates.map((d, i) => (
-            <LineInput key={i} value={d} placeholder={`Date ${i + 1}...`} onChange={v => setImportantDate(i, v)} />
+            <input
+              key={i}
+              ref={el => dateRefs.current[i] = el}
+              value={d}
+              onChange={e => {
+                const importantDates = [...data.importantDates];
+                importantDates[i] = e.target.value;
+                update({ ...data, importantDates });
+              }}
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (i === data.importantDates.length - 1) {
+                  const idx = addDate();
+                  setTimeout(() => dateRefs.current[idx]?.focus(), 0);
+                } else {
+                  dateRefs.current[i + 1]?.focus();
+                }
+              }}
+              placeholder={`Date ${i + 1}...`}
+              className="block w-full border-0 border-b border-[#e3e5e8] bg-transparent text-[13px] text-[#3d3f4e] outline-none pb-1 mb-2 box-border placeholder:text-[#c4c7d5] focus:border-[#7c5cbf] transition-colors"
+            />
           ))}
         </SectionCard>
 
-        <SectionCard title="🎯 Monthly Goals">
+        <SectionCard title="🎯 Monthly Goals" showHint>
           {data.goals.map((g, i) => (
             <div key={i} className="flex items-center gap-2 mb-[6px]">
               <button
-                onClick={() => setGoal(i, 'done', !g.done)}
+                onClick={() => {
+                  const goals = data.goals.map((goal, gi) =>
+                    gi === i ? { ...goal, done: !goal.done } : goal
+                  );
+                  update({ ...data, goals });
+                }}
                 className="w-4 h-4 rounded flex-shrink-0 border-2 flex items-center justify-center transition-colors cursor-pointer bg-transparent outline-none"
                 style={{ borderColor: '#7c5cbf', background: g.done ? '#7c5cbf' : 'transparent' }}
               >
@@ -69,8 +102,24 @@ export default function MonthlyOverview({ year, monthIndex }) {
                 )}
               </button>
               <input
+                ref={el => goalRefs.current[i] = el}
                 value={g.text}
-                onChange={e => setGoal(i, 'text', e.target.value)}
+                onChange={e => {
+                  const goals = data.goals.map((goal, gi) =>
+                    gi === i ? { ...goal, text: e.target.value } : goal
+                  );
+                  update({ ...data, goals });
+                }}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter') return;
+                  e.preventDefault();
+                  if (i === data.goals.length - 1) {
+                    const idx = addGoal();
+                    setTimeout(() => goalRefs.current[idx]?.focus(), 0);
+                  } else {
+                    goalRefs.current[i + 1]?.focus();
+                  }
+                }}
                 placeholder={`Goal ${i + 1}...`}
                 className="border-0 bg-transparent text-[13px] w-full outline-none placeholder:text-[#c4c7d5]"
                 style={{
@@ -85,9 +134,30 @@ export default function MonthlyOverview({ year, monthIndex }) {
 
       {/* Row 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <SectionCard title="🎂 Birthdays">
+        <SectionCard title="🎂 Birthdays" showHint>
           {data.birthdays.map((b, i) => (
-            <LineInput key={i} value={b} placeholder="Name + date..." onChange={v => setBirthday(i, v)} />
+            <input
+              key={i}
+              ref={el => birthdayRefs.current[i] = el}
+              value={b}
+              onChange={e => {
+                const birthdays = [...data.birthdays];
+                birthdays[i] = e.target.value;
+                update({ ...data, birthdays });
+              }}
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (i === data.birthdays.length - 1) {
+                  const idx = addBirthday();
+                  setTimeout(() => birthdayRefs.current[idx]?.focus(), 0);
+                } else {
+                  birthdayRefs.current[i + 1]?.focus();
+                }
+              }}
+              placeholder="Name + date..."
+              className="block w-full border-0 border-b border-[#e3e5e8] bg-transparent text-[13px] text-[#3d3f4e] outline-none pb-1 mb-2 box-border placeholder:text-[#c4c7d5] focus:border-[#7c5cbf] transition-colors"
+            />
           ))}
         </SectionCard>
 
