@@ -7,6 +7,14 @@ import { loadWeekData, saveWeekData } from '../utils/storage';
 import { getDatesForWeek, getTodayInfo, formatDate, MONTH_NAMES } from '../utils/calendarUtils';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const DEFAULT_QUOTE = 'What will I do, by when, and what is my reward?';
+
+function loadQuote() {
+  try { return localStorage.getItem('planner_quote') || DEFAULT_QUOTE; } catch { return DEFAULT_QUOTE; }
+}
+function saveQuote(q) {
+  try { localStorage.setItem('planner_quote', q); } catch { /* ignore */ }
+}
 
 function newTodo() {
   return { id: crypto.randomUUID(), text: '', done: false, status: 'not_started', description: '', subtasks: [] };
@@ -20,6 +28,9 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
   const [modalDay, setModalDay] = useState(null);
   const [taskModalId, setTaskModalId] = useState(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [quote, setQuote] = useState(loadQuote);
+  const [editingQuote, setEditingQuote] = useState(false);
+  const quoteRef = useRef(null);
 
   const priorityRefs = useRef([]);
   const reminderRefs = useRef([]);
@@ -92,13 +103,40 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <div className="text-[11px] font-bold text-[#9b9eb0] tracking-[0.1em] uppercase mb-1">
-          {headerMonth} {weekYear}
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <div className="text-[11px] font-bold text-[#9b9eb0] tracking-[0.1em] uppercase mb-1">
+            {headerMonth} {weekYear}
+          </div>
+          <h1 className="text-[26px] font-extrabold text-[#1a1a2e] leading-none m-0">
+            Week of {weekLabel}
+          </h1>
         </div>
-        <h1 className="text-[26px] font-extrabold text-[#1a1a2e] leading-none m-0">
-          Week of {weekLabel}
-        </h1>
+
+        {/* Editable weekly quote */}
+        <div className="flex-shrink-0 max-w-xs text-right">
+          {editingQuote ? (
+            <input
+              ref={quoteRef}
+              value={quote}
+              onChange={e => setQuote(e.target.value)}
+              onBlur={() => { saveQuote(quote); setEditingQuote(false); }}
+              onKeyDown={e => { if (e.key === 'Enter') quoteRef.current?.blur(); }}
+              className="text-[13px] italic text-right bg-transparent border-0 border-b outline-none w-full"
+              style={{ color: '#9b9eb0', borderColor: '#c4c7d5', fontFamily: 'inherit' }}
+              autoFocus
+            />
+          ) : (
+            <span
+              onClick={() => setEditingQuote(true)}
+              title="Click to edit"
+              className="text-[13px] italic cursor-text select-none transition-colors hover:text-[#7c5cbf]"
+              style={{ color: '#b0b3c4' }}
+            >
+              {quote}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Row 1: Priorities / To-Do / Reminders */}
