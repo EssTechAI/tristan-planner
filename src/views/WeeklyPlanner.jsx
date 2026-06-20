@@ -156,12 +156,6 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                 ref={el => todoRefs.current[activeIdx] = el}
                 value={t.text}
                 onChange={e => patchTodo(t.id, { text: e.target.value })}
-                onMouseDown={e => {
-                  if (document.activeElement !== e.currentTarget) {
-                    e.preventDefault();
-                    setTaskModalId(t.id);
-                  }
-                }}
                 onKeyDown={e => {
                   if (e.key !== 'Enter') return;
                   e.preventDefault();
@@ -173,9 +167,19 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                   }
                 }}
                 placeholder="Add task..."
-                className="border-0 bg-transparent text-[13px] w-full outline-none placeholder:text-[#c4c7d5] cursor-pointer"
+                className="border-0 bg-transparent text-[13px] w-full outline-none placeholder:text-[#c4c7d5]"
                 style={{ color: '#3d3f4e' }}
               />
+              <button
+                onClick={() => setTaskModalId(t.id)}
+                title="Open task details"
+                className="opacity-0 group-hover:opacity-100 flex-shrink-0 bg-transparent border-0 cursor-pointer p-0 transition-opacity"
+                style={{ color: '#9b9eb0', lineHeight: 1 }}
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M2 11L11 2M11 2H5.5M11 2V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
             </div>
           ))}
 
