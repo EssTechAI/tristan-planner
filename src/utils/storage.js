@@ -1,10 +1,35 @@
 import { supabase } from '../lib/supabase';
 
 const timers = {};
+const pending = {};
 
 function debounced(key, fn) {
   clearTimeout(timers[key]);
-  timers[key] = setTimeout(fn, 300);
+  pending[key] = fn;
+  timers[key] = setTimeout(() => {
+    delete pending[key];
+    fn();
+  }, 300);
+}
+
+// Force any pending debounced saves to run immediately, instead of waiting
+// out the countdown — needed because backgrounded tabs can pause timers
+// before the normal 300ms save has a chance to fire.
+export function flushPendingSaves() {
+  Object.keys(pending).forEach(key => {
+    clearTimeout(timers[key]);
+    const fn = pending[key];
+    delete pending[key];
+    delete timers[key];
+    fn();
+  });
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPendingSaves();
+  });
+  window.addEventListener('pagehide', flushPendingSaves);
 }
 
 function defaultTodo() {
