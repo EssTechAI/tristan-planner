@@ -1,23 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import SectionCard from '../components/SectionCard';
 import MiniCalendar from '../components/MiniCalendar';
-import { loadMonthData, saveMonthData } from '../utils/storage';
+import { loadMonthData, saveMonthData, defaultMonthData } from '../utils/storage';
+import { useAuth } from '../context/AuthContext';
 import { MONTH_NAMES } from '../utils/calendarUtils';
 
 export default function MonthlyOverview({ year, monthIndex }) {
-  const [data, setData] = useState(() => loadMonthData(year, monthIndex));
+  const { user } = useAuth();
+  const [data, setData] = useState(defaultMonthData);
 
   const dateRefs = useRef([]);
   const goalRefs = useRef([]);
   const birthdayRefs = useRef([]);
 
   useEffect(() => {
-    setData(loadMonthData(year, monthIndex));
-  }, [year, monthIndex]);
+    if (!user) return;
+    let cancelled = false;
+    setData(defaultMonthData());
+    loadMonthData(user.id, year, monthIndex).then(loaded => {
+      if (!cancelled) setData(loaded);
+    });
+    return () => { cancelled = true; };
+  }, [user, year, monthIndex]);
 
   const update = (next) => {
     setData(next);
-    saveMonthData(year, monthIndex, next);
+    if (user) saveMonthData(user.id, year, monthIndex, next);
   };
 
   // --- Important Dates ---

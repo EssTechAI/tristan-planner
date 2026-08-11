@@ -3,7 +3,8 @@ import SectionCard from '../components/SectionCard';
 import RichTextArea from '../components/RichTextArea';
 import DayModal from '../components/DayModal';
 import TaskModal from '../components/TaskModal';
-import { loadWeekData, saveWeekData } from '../utils/storage';
+import { loadWeekData, saveWeekData, defaultWeekData } from '../utils/storage';
+import { useAuth } from '../context/AuthContext';
 import { getDatesForWeek, getTodayInfo, formatDate, MONTH_NAMES } from '../utils/calendarUtils';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -21,7 +22,8 @@ function newTodo() {
 }
 
 export default function WeeklyPlanner({ weekNumber, weekYear }) {
-  const [data, setData] = useState(() => loadWeekData(weekNumber, weekYear));
+  const { user } = useAuth();
+  const [data, setData] = useState(defaultWeekData);
   const dates = getDatesForWeek(weekNumber, weekYear);
   const today = getTodayInfo();
 
@@ -38,15 +40,21 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
   const todoRefs = useRef([]);
 
   useEffect(() => {
-    setData(loadWeekData(weekNumber, weekYear));
     setShowCompleted(false);
     setModalDay(null);
     setTaskModalId(null);
-  }, [weekNumber, weekYear]);
+    if (!user) return;
+    let cancelled = false;
+    setData(defaultWeekData());
+    loadWeekData(user.id, weekYear, weekNumber).then(loaded => {
+      if (!cancelled) setData(loaded);
+    });
+    return () => { cancelled = true; };
+  }, [user, weekNumber, weekYear]);
 
   const update = (next) => {
     setData(next);
-    saveWeekData(weekNumber, weekYear, next);
+    if (user) saveWeekData(user.id, weekYear, weekNumber, next);
   };
 
   const isTodayIndex = (i) => {

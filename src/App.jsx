@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -7,6 +8,7 @@ import WeeklyPlanner from './views/WeeklyPlanner';
 import Login from './views/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { getTodayInfo, getDatesForWeek } from './utils/calendarUtils';
+import { migrateLocalStorageToSupabase } from './utils/storage';
 
 function CurrentWeekRedirect() {
   const { weekYear, weekNumber } = getTodayInfo();
@@ -71,6 +73,10 @@ function WeekRoute() {
 
 function AuthGate() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (user) migrateLocalStorageToSupabase(user.id);
+  }, [user]);
 
   if (loading) return <div className="min-h-screen bg-white" />;
   if (!user) return <Login />;
