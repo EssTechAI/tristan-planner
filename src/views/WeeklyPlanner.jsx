@@ -143,7 +143,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-4">
         <div>
           <div className="text-[11px] font-bold text-[#9b9eb0] tracking-[0.1em] uppercase mb-1">
             {headerMonth} {weekYear}
@@ -154,7 +154,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
         </div>
 
         {/* Editable weekly quote */}
-        <div className="flex-shrink-0 max-w-xs text-right">
+        <div className="sm:flex-shrink-0 sm:max-w-xs text-left sm:text-right">
           {editingQuote ? (
             <input
               ref={quoteRef}
@@ -162,7 +162,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
               onChange={e => setQuote(e.target.value)}
               onBlur={() => { saveQuote(quote); setEditingQuote(false); }}
               onKeyDown={e => { if (e.key === 'Enter') quoteRef.current?.blur(); }}
-              className="text-[13px] italic text-right bg-transparent border-0 border-b outline-none w-full"
+              className="text-[13px] italic text-left sm:text-right bg-transparent border-0 border-b outline-none w-full"
               style={{ color: '#9b9eb0', borderColor: '#c4c7d5', fontFamily: 'inherit' }}
               autoFocus
             />
