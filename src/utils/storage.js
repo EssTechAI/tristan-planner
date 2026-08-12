@@ -40,6 +40,7 @@ function defaultTodo() {
     status: 'not_started',
     description: '',
     subtasks: [],
+    assignedDay: null,
   };
 }
 
@@ -83,6 +84,7 @@ function normalizeWeekData(raw) {
       status: 'not_started',
       description: '',
       subtasks: [],
+      assignedDay: null,
       ...t,
     }));
   }

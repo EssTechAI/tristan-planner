@@ -8,6 +8,15 @@ import { useAuth } from '../context/useAuth';
 import { getDatesForWeek, getTodayInfo, formatDate, MONTH_NAMES } from '../utils/calendarUtils';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const DAY_COLORS = {
+  MON: '#ff5c5c',
+  TUE: '#4e9af1',
+  WED: '#7c5cbf',
+  THU: '#ff9d3d',
+  FRI: '#2ecc71',
+  SAT: '#ec6fae',
+  SUN: '#3dbfad',
+};
 const DEFAULT_QUOTE = 'What will I do, by when, and what is my reward?';
 
 function loadQuote() {
@@ -18,7 +27,15 @@ function saveQuote(q) {
 }
 
 function newTodo() {
-  return { id: crypto.randomUUID(), text: '', done: false, status: 'not_started', description: '', subtasks: [] };
+  return {
+    id: crypto.randomUUID(),
+    text: '',
+    done: false,
+    status: 'not_started',
+    description: '',
+    subtasks: [],
+    assignedDay: null,
+  };
 }
 
 export default function WeeklyPlanner({ weekNumber, weekYear }) {
@@ -231,6 +248,21 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                 className="border-0 bg-transparent text-[13px] w-full outline-none placeholder:text-[#c4c7d5]"
                 style={{ color: '#3d3f4e' }}
               />
+              <select
+                value={t.assignedDay || ''}
+                onChange={e => patchTodo(t.id, { assignedDay: e.target.value || null })}
+                title="Assign to a day"
+                className="flex-shrink-0 text-[10px] font-bold border-0 outline-none cursor-pointer rounded-full px-2 py-0.5 text-center appearance-none"
+                style={{
+                  background: t.assignedDay ? DAY_COLORS[t.assignedDay] : '#eef0f3',
+                  color: t.assignedDay ? '#fff' : '#b0b3c4',
+                }}
+              >
+                <option value="">—</option>
+                {DAYS.map(day => (
+                  <option key={day} value={day}>{day}</option>
+                ))}
+              </select>
               <button
                 onClick={() => setTaskModalId(t.id)}
                 title="Open task details"
@@ -309,6 +341,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
         <div className="grid grid-cols-7 gap-2">
           {DAYS.map((day, i) => {
             const isToday = isTodayIndex(i);
+            const dayTodos = data.todos.filter(t => t.assignedDay === day);
             return (
               <div
                 key={day}
@@ -325,6 +358,32 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                 >
                   {formatDate(dates[i])}
                 </div>
+
+                {dayTodos.length > 0 && (
+                  <div className="mb-2" onClick={e => e.stopPropagation()}>
+                    {dayTodos.map(t => (
+                      <div key={t.id} className="flex items-center gap-1.5 mb-1">
+                        <input
+                          type="checkbox"
+                          checked={t.done}
+                          onChange={() => patchTodo(t.id, { done: !t.done })}
+                          className="flex-shrink-0 w-[12px] h-[12px] cursor-pointer accent-[#7c5cbf]"
+                        />
+                        <span
+                          className="text-[11px] truncate"
+                          title={t.text}
+                          style={{
+                            color: t.done ? '#9b9eb0' : '#3d3f4e',
+                            textDecoration: t.done ? 'line-through' : 'none',
+                          }}
+                        >
+                          {t.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div onClick={e => e.stopPropagation()}>
                   <RichTextArea
                     value={data.dayNotes[day]}
