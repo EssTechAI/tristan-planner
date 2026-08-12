@@ -266,7 +266,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
               <button
                 onClick={() => setTaskModalId(t.id)}
                 title="Open task details"
-                className="opacity-0 group-hover:opacity-100 flex-shrink-0 bg-transparent border-0 cursor-pointer p-0 transition-opacity"
+                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0 bg-transparent border-0 cursor-pointer p-0 transition-opacity"
                 style={{ color: '#9b9eb0', lineHeight: 1 }}
               >
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -338,7 +338,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
 
       {/* Row 2: Day grid */}
       <SectionCard title="📅 This Week" className="mb-3.5">
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2">
           {DAYS.map((day, i) => {
             const isToday = isTodayIndex(i);
             const dayTodos = data.todos.filter(t => t.assignedDay === day);

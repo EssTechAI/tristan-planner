@@ -29,7 +29,7 @@ function AppShell({ year, monthIndex, weekNumber, weekYear, view, children }) {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopBar year={year} monthIndex={monthIndex} weekNumber={weekNumber} view={view} />
         <TabBar year={year} monthIndex={monthIndex} weekNumber={weekNumber} weekYear={weekYear} view={view} />
-        <main className="flex-1 overflow-y-auto bg-[#f7f8fa] p-7">
+        <main className="flex-1 overflow-y-auto bg-[#f7f8fa] p-4 sm:p-7">
           {children}
         </main>
       </div>

@@ -9,8 +9,8 @@ export default function TopBar({ year, monthIndex, weekNumber, view }) {
   const { signOut } = useAuth();
 
   return (
-    <div className="bg-[#1a1a2e] text-white px-5 flex items-center gap-4 h-12 text-[13px] flex-shrink-0">
-      <div className="flex items-center gap-2">
+    <div className="bg-[#1a1a2e] text-white px-3 sm:px-5 flex items-center gap-2 sm:gap-4 h-12 text-[13px] flex-shrink-0 overflow-x-auto">
+      <div className="flex items-center gap-2 flex-shrink-0">
         <div
           className="w-7 h-7 rounded-[6px] flex items-center justify-center text-white font-black text-sm flex-shrink-0"
           style={{ background: 'linear-gradient(135deg, #7c5cbf, #4e9af1)' }}
@@ -20,23 +20,23 @@ export default function TopBar({ year, monthIndex, weekNumber, view }) {
         <span className="font-semibold text-sm">My Planner</span>
       </div>
 
-      <span className="opacity-40">›</span>
-      <span className="opacity-70">{year}</span>
-      <span className="opacity-40">›</span>
-      <span className="font-semibold" style={{ color: '#7c8cff' }}>{MONTH_NAMES[monthIndex]}</span>
+      <span className="opacity-40 hidden sm:inline">›</span>
+      <span className="opacity-70 hidden sm:inline">{year}</span>
+      <span className="opacity-40 flex-shrink-0">›</span>
+      <span className="font-semibold flex-shrink-0" style={{ color: '#7c8cff' }}>{MONTH_NAMES[monthIndex]}</span>
 
       {view === 'weekly' && weekNumber != null && (
         <>
-          <span className="opacity-40">›</span>
-          <span className="font-semibold text-[#4e9af1]">Week {weekNumber}</span>
+          <span className="opacity-40 flex-shrink-0">›</span>
+          <span className="font-semibold text-[#4e9af1] flex-shrink-0">Week {weekNumber}</span>
         </>
       )}
 
-      <div className="ml-auto flex items-center gap-4">
-        <span className="text-[12px] opacity-60">{todayStr}</span>
+      <div className="ml-auto flex items-center gap-3 sm:gap-4 flex-shrink-0">
+        <span className="text-[12px] opacity-60 hidden md:inline">{todayStr}</span>
         <button
           onClick={signOut}
-          className="text-[12px] opacity-50 hover:opacity-100 transition-opacity bg-transparent border-0 text-white cursor-pointer p-0"
+          className="text-[12px] opacity-50 hover:opacity-100 transition-opacity bg-transparent border-0 text-white cursor-pointer p-0 flex-shrink-0"
         >
           Sign out
         </button>
