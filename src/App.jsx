@@ -6,7 +6,8 @@ import TabBar from './components/TabBar';
 import MonthlyOverview from './views/MonthlyOverview';
 import WeeklyPlanner from './views/WeeklyPlanner';
 import Login from './views/Login';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/useAuth';
 import { getTodayInfo, getDatesForWeek } from './utils/calendarUtils';
 import { migrateLocalStorageToSupabase } from './utils/storage';
 
@@ -26,7 +27,7 @@ function AppShell({ year, monthIndex, weekNumber, weekYear, view, children }) {
         view={view}
       />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <TopBar year={year} monthIndex={monthIndex} weekNumber={weekNumber} weekYear={weekYear} view={view} />
+        <TopBar year={year} monthIndex={monthIndex} weekNumber={weekNumber} view={view} />
         <TabBar year={year} monthIndex={monthIndex} weekNumber={weekNumber} weekYear={weekYear} view={view} />
         <main className="flex-1 overflow-y-auto bg-[#f7f8fa] p-7">
           {children}

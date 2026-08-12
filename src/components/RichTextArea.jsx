@@ -46,14 +46,13 @@ function setCursorAt(node, offset) {
   } catch { /* ignore */ }
 }
 
-export default function RichTextArea({ value, onChange, placeholder }) {
+export default function RichTextArea({ value, onChange, placeholder, minHeight = 60 }) {
   const ref = useRef(null);
   const focused = useRef(false);
-  const [showPlaceholder, setShowPlaceholder] = useState(!value);
+  const [showPlaceholder, setShowPlaceholder] = useState(!value || value.trim() === '');
 
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = valueToHtml(value);
-    setShowPlaceholder(!value || value.trim() === '');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -161,8 +160,8 @@ export default function RichTextArea({ value, onChange, placeholder }) {
           const text = htmlToText(ref.current);
           setShowPlaceholder(!text || text.trim() === '');
         }}
-        className="w-full min-h-[60px] outline-none text-[12px] leading-[1.5]"
-        style={{ color: '#3d3f4e', wordBreak: 'break-word' }}
+        className="w-full outline-none text-[12px] leading-[1.5]"
+        style={{ color: '#3d3f4e', wordBreak: 'break-word', minHeight }}
       />
     </div>
   );

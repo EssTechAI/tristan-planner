@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import SectionCard from '../components/SectionCard';
 import MiniCalendar from '../components/MiniCalendar';
 import { loadMonthData, saveMonthData, defaultMonthData } from '../utils/storage';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { MONTH_NAMES } from '../utils/calendarUtils';
 
 export default function MonthlyOverview({ year, monthIndex }) {
@@ -16,7 +16,6 @@ export default function MonthlyOverview({ year, monthIndex }) {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    setData(defaultMonthData());
     loadMonthData(user.id, year, monthIndex).then(loaded => {
       if (!cancelled) setData(loaded);
     });

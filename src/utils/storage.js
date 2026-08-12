@@ -43,6 +43,10 @@ function defaultTodo() {
   };
 }
 
+function defaultGroceryItem() {
+  return { id: crypto.randomUUID(), text: '', done: false };
+}
+
 export function defaultMonthData() {
   return {
     importantDates: ['', '', '', '', '', ''],
@@ -59,6 +63,7 @@ export function defaultWeekData() {
     reminders: ['', '', '', ''],
     mealPlan: { MON: '', TUE: '', WED: '', THU: '', FRI: '', SAT: '', SUN: '' },
     dayNotes: { MON: '', TUE: '', WED: '', THU: '', FRI: '', SAT: '', SUN: '' },
+    groceryList: [defaultGroceryItem()],
     notes: '',
   };
 }
@@ -80,6 +85,9 @@ function normalizeWeekData(raw) {
       subtasks: [],
       ...t,
     }));
+  }
+  if (!Array.isArray(data.groceryList)) {
+    data.groceryList = defaultWeekData().groceryList;
   }
   return data;
 }

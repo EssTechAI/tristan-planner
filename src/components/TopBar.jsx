@@ -1,9 +1,9 @@
 import { MONTH_NAMES } from '../utils/calendarUtils';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function TopBar({ year, monthIndex, weekNumber, weekYear, view }) {
+export default function TopBar({ year, monthIndex, weekNumber, view }) {
   const now = new Date();
   const todayStr = `${DOW[now.getDay()]}, ${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
   const { signOut } = useAuth();

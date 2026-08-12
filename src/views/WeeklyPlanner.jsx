@@ -4,7 +4,7 @@ import RichTextArea from '../components/RichTextArea';
 import DayModal from '../components/DayModal';
 import TaskModal from '../components/TaskModal';
 import { loadWeekData, saveWeekData, defaultWeekData } from '../utils/storage';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { getDatesForWeek, getTodayInfo, formatDate, MONTH_NAMES } from '../utils/calendarUtils';
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -38,14 +38,15 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
   const reminderRefs = useRef([]);
   const mealRefs = useRef([]);
   const todoRefs = useRef([]);
+  const groceryRefs = useRef([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing transient UI (open modals, filters) on week change is intentional, not data syncing
     setShowCompleted(false);
     setModalDay(null);
     setTaskModalId(null);
     if (!user) return;
     let cancelled = false;
-    setData(defaultWeekData());
     loadWeekData(user.id, weekYear, weekNumber).then(loaded => {
       if (!cancelled) setData(loaded);
     });
@@ -103,6 +104,20 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
     const reminders = [...data.reminders, ''];
     update({ ...data, reminders });
     return reminders.length - 1;
+  };
+
+  // --- Grocery List ---
+  const addGroceryItem = () => {
+    const groceryList = [...data.groceryList, { id: crypto.randomUUID(), text: '', done: false }];
+    update({ ...data, groceryList });
+    return groceryList.length - 1;
+  };
+
+  const patchGroceryItem = (id, updates) => {
+    update({
+      ...data,
+      groceryList: data.groceryList.map(item => item.id === id ? { ...item, ...updates } : item),
+    });
   };
 
   const weekLabel = `${formatDate(dates[0])} – ${formatDate(dates[6])}`;
@@ -315,6 +330,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                     value={data.dayNotes[day]}
                     onChange={val => update({ ...data, dayNotes: { ...data.dayNotes, [day]: val } })}
                     placeholder="..."
+                    minHeight={192}
                   />
                 </div>
               </div>
@@ -326,23 +342,69 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
       {/* Row 3: Meal Plans + Notes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         <SectionCard title="🥗 Meal Plans">
-          {DAYS.map((day, i) => (
-            <div key={day} className="flex gap-2.5 items-center mb-[5px]">
-              <span className="text-[11px] font-bold text-[#9b9eb0] w-7 flex-shrink-0">{day}</span>
-              <input
-                ref={el => mealRefs.current[i] = el}
-                value={data.mealPlan[day]}
-                onChange={e => update({ ...data, mealPlan: { ...data.mealPlan, [day]: e.target.value } })}
-                onKeyDown={e => {
-                  if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  if (i < DAYS.length - 1) mealRefs.current[i + 1]?.focus();
-                }}
-                placeholder="Meal..."
-                className="border-0 border-b border-[#e3e5e8] bg-transparent text-[13px] text-[#3d3f4e] w-full outline-none pb-0.5 placeholder:text-[#c4c7d5] focus:border-[#4e9af1] transition-colors"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              {DAYS.map((day, i) => (
+                <div key={day} className="flex gap-2.5 items-center mb-[5px]">
+                  <span className="text-[11px] font-bold text-[#9b9eb0] w-7 flex-shrink-0">{day}</span>
+                  <input
+                    ref={el => mealRefs.current[i] = el}
+                    value={data.mealPlan[day]}
+                    onChange={e => update({ ...data, mealPlan: { ...data.mealPlan, [day]: e.target.value } })}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return;
+                      e.preventDefault();
+                      if (i < DAYS.length - 1) mealRefs.current[i + 1]?.focus();
+                    }}
+                    placeholder="Meal..."
+                    className="border-0 border-b border-[#e3e5e8] bg-transparent text-[13px] text-[#3d3f4e] w-full outline-none pb-0.5 placeholder:text-[#c4c7d5] focus:border-[#4e9af1] transition-colors"
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+
+            <div className="sm:pl-4 sm:border-l sm:border-[#e3e5e8]">
+              <div className="text-[10px] font-bold text-[#9b9eb0] tracking-[0.1em] uppercase mb-2">
+                Grocery List
+              </div>
+              {data.groceryList.map((item, i) => (
+                <div key={item.id} className="flex gap-2 items-center mb-[6px]">
+                  <button
+                    onClick={() => patchGroceryItem(item.id, { done: !item.done })}
+                    className="w-4 h-4 rounded-full flex-shrink-0 border-2 flex items-center justify-center transition-colors cursor-pointer bg-transparent outline-none"
+                    style={{ borderColor: '#7c5cbf', background: item.done ? '#7c5cbf' : 'transparent' }}
+                  >
+                    {item.done && (
+                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                        <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                  <input
+                    ref={el => groceryRefs.current[i] = el}
+                    value={item.text}
+                    onChange={e => patchGroceryItem(item.id, { text: e.target.value })}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return;
+                      e.preventDefault();
+                      if (i === data.groceryList.length - 1) {
+                        const idx = addGroceryItem();
+                        setTimeout(() => groceryRefs.current[idx]?.focus(), 0);
+                      } else {
+                        groceryRefs.current[i + 1]?.focus();
+                      }
+                    }}
+                    placeholder="Add item..."
+                    className="border-0 bg-transparent text-[13px] w-full outline-none placeholder:text-[#c4c7d5]"
+                    style={{
+                      color: item.done ? '#9b9eb0' : '#3d3f4e',
+                      textDecoration: item.done ? 'line-through' : 'none',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </SectionCard>
 
         <SectionCard title="📝 Notes">
