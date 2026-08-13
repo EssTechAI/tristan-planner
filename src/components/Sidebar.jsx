@@ -104,6 +104,7 @@ export default function Sidebar({ activeYear, activeMonthIndex, activeWeekNumber
       <div className="md:hidden">
         <button
           onClick={() => setOpen(o => !o)}
+          aria-label={open ? 'Close menu' : 'Open menu'}
           className="fixed top-3 left-3 z-50 w-8 h-8 flex flex-col gap-1.5 items-center justify-center bg-white rounded shadow border border-[#e3e5e8]"
         >
           <span className="w-4 h-0.5 bg-[#3d3f4e] rounded" />

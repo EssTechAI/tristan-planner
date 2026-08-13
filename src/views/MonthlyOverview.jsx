@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import SectionCard from '../components/SectionCard';
 import MiniCalendar from '../components/MiniCalendar';
+import RichTextArea from '../components/RichTextArea';
 import { loadMonthData, saveMonthData, defaultMonthData } from '../utils/storage';
 import { useAuth } from '../context/useAuth';
 import { MONTH_NAMES } from '../utils/calendarUtils';
@@ -175,11 +176,11 @@ export default function MonthlyOverview({ year, monthIndex }) {
 
       {/* Notes */}
       <SectionCard title="📝 Other Notes">
-        <textarea
+        <RichTextArea
           value={data.notes}
-          onChange={e => update({ ...data, notes: e.target.value })}
+          onChange={val => update({ ...data, notes: val })}
           placeholder="Anything else for the month..."
-          className="w-full min-h-[80px] border-0 bg-transparent text-[13px] text-[#3d3f4e] resize-y outline-none leading-relaxed box-border placeholder:text-[#c4c7d5]"
+          minHeight={80}
         />
       </SectionCard>
     </div>

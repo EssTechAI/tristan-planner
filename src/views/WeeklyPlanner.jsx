@@ -361,26 +361,49 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
 
                 {dayTodos.length > 0 && (
                   <div className="mb-2" onClick={e => e.stopPropagation()}>
-                    {dayTodos.map(t => (
-                      <div key={t.id} className="flex items-center gap-1.5 mb-1">
-                        <input
-                          type="checkbox"
-                          checked={t.done}
-                          onChange={() => patchTodo(t.id, { done: !t.done })}
-                          className="flex-shrink-0 w-[12px] h-[12px] cursor-pointer accent-[#7c5cbf]"
-                        />
-                        <span
-                          className="text-[11px] truncate"
-                          title={t.text}
-                          style={{
-                            color: t.done ? '#9b9eb0' : '#3d3f4e',
-                            textDecoration: t.done ? 'line-through' : 'none',
-                          }}
-                        >
-                          {t.text}
-                        </span>
-                      </div>
-                    ))}
+                    {dayTodos.map(t => {
+                      const visibleSubtasks = (t.subtasks || []).filter(s => s.text.trim() !== '');
+                      return (
+                        <div key={t.id} className="mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="checkbox"
+                              checked={t.done}
+                              onChange={() => patchTodo(t.id, { done: !t.done })}
+                              className="flex-shrink-0 w-[12px] h-[12px] cursor-pointer accent-[#7c5cbf]"
+                            />
+                            <span
+                              className="text-[11px] truncate cursor-pointer"
+                              title={`${t.text} — tap for details`}
+                              onClick={() => setTaskModalId(t.id)}
+                              style={{
+                                color: t.done ? '#9b9eb0' : '#3d3f4e',
+                                textDecoration: t.done ? 'line-through' : 'none',
+                              }}
+                            >
+                              {t.text}
+                            </span>
+                          </div>
+                          {visibleSubtasks.length > 0 && (
+                            <div className="pl-[18px] mt-0.5">
+                              {visibleSubtasks.map(s => (
+                                <div
+                                  key={s.id}
+                                  className="text-[10px] truncate"
+                                  title={s.text}
+                                  style={{
+                                    color: s.done ? '#c4c7d5' : '#9b9eb0',
+                                    textDecoration: s.done ? 'line-through' : 'none',
+                                  }}
+                                >
+                                  • {s.text}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -467,11 +490,11 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
         </SectionCard>
 
         <SectionCard title="📝 Notes">
-          <textarea
+          <RichTextArea
             value={data.notes}
-            onChange={e => update({ ...data, notes: e.target.value })}
+            onChange={val => update({ ...data, notes: val })}
             placeholder="Anything else this week..."
-            className="w-full min-h-[140px] border-0 bg-transparent text-[13px] text-[#3d3f4e] resize-y outline-none leading-relaxed box-border placeholder:text-[#c4c7d5]"
+            minHeight={140}
           />
         </SectionCard>
       </div>

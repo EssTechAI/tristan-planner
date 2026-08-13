@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import RichTextArea from './RichTextArea';
 
 const STATUS = {
   not_started: { label: 'Not started', bg: '#e3e5e8', color: '#6b6e80' },
@@ -103,12 +104,11 @@ export default function TaskModal({ task, onClose, onUpdate }) {
           <div className="text-[10px] font-bold text-[#9b9eb0] tracking-[0.1em] uppercase mb-2">
             Description
           </div>
-          <textarea
+          <RichTextArea
             value={local.description || ''}
-            onChange={e => patch({ description: e.target.value })}
+            onChange={val => patch({ description: val })}
             placeholder="Add a description..."
-            className="w-full border-0 outline-none bg-transparent text-[13px] text-[#3d3f4e] resize-none leading-relaxed placeholder:text-[#c4c7d5]"
-            style={{ fontFamily: 'inherit', minHeight: 80 }}
+            minHeight={80}
           />
 
           <div className="border-b border-[#e8e9ef] my-4" />

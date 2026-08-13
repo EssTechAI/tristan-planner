@@ -60,8 +60,11 @@ Free-tier Supabase projects auto-pause after ~7 days of no API activity. `.githu
 ## File Structure
 ```
 src/
-  components/   Sidebar, TopBar, TabBar, SectionCard, LineInput, MiniCalendar
-  views/        MonthlyOverview, WeeklyPlanner
+  components/   Sidebar, TopBar, TabBar, SectionCard, MiniCalendar,
+                RichTextArea, DayModal, TaskModal
+  views/        MonthlyOverview, WeeklyPlanner, Login
+  context/      AuthContext.jsx (AuthProvider), useAuth.js (context + hook)
+  lib/          supabase.js (Supabase client)
   utils/        calendarUtils.js, storage.js
   App.jsx       Router + layout shell
   main.jsx
