@@ -11,6 +11,14 @@ jobs:
     steps:
       - name: Ping Supabase health endpoint
         run: |
-          curl -sf "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -o /dev/null
+          response=$(curl -s -w "HTTPSTATUS:%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}")
+          status=$(echo "$response" | grep -o 'HTTPSTATUS:[0-9]*' | cut -d: -f2)
+          body=$(echo "$response" | sed -e 's/HTTPSTATUS:[0-9]*$//')
+          echo "HTTP status: $status"
+          echo "Response body: $body"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Supabase health check failed with HTTP status $status — check that SUPABASE_URL and SUPABASE_ANON_KEY repo secrets are set correctly"
+            exit 1
+          fi
