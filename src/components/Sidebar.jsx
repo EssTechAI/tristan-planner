@@ -96,12 +96,12 @@ export default function Sidebar({ activeYear, activeMonthIndex, activeWeekNumber
   return (
     <>
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-52 bg-white border-r border-[#e3e5e8] flex-shrink-0 flex-col">
+      <div className="hidden lg:flex w-52 bg-white border-r border-[#e3e5e8] flex-shrink-0 flex-col">
         {inner}
       </div>
 
-      {/* Mobile: hamburger + drawer */}
-      <div className="md:hidden">
+      {/* Mobile + tablet: hamburger + drawer */}
+      <div className="lg:hidden">
         <button
           onClick={() => setOpen(o => !o)}
           aria-label={open ? 'Close menu' : 'Open menu'}

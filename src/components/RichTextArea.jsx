@@ -46,6 +46,27 @@ function setCursorAt(node, offset) {
   } catch { /* ignore */ }
 }
 
+function getCursorOffsetInLine(lineDiv) {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return null;
+  const range = sel.getRangeAt(0);
+  if (!lineDiv.contains(range.startContainer)) return null;
+  const preRange = document.createRange();
+  preRange.selectNodeContents(lineDiv);
+  preRange.setEnd(range.startContainer, range.startOffset);
+  return preRange.toString().length;
+}
+
+const BULLET_CHARS = ['•', '◦', '▪'];
+const INDENT_UNIT = '  '; // 2 spaces per nesting level
+
+function parseBullet(lineText) {
+  const m = lineText.match(/^( *)([•◦▪]) /);
+  if (!m) return null;
+  const indent = m[1];
+  return { indent, marker: m[2], level: Math.round(indent.length / INDENT_UNIT.length), prefixLength: m[0].length };
+}
+
 export default function RichTextArea({ value, onChange, placeholder, minHeight = 60 }) {
   const ref = useRef(null);
   const focused = useRef(false);
@@ -91,36 +112,45 @@ export default function RichTextArea({ value, onChange, placeholder, minHeight =
     if (e.key === 'Enter') {
       e.preventDefault();
 
-      if (lineText.startsWith('• ')) {
-        const content = lineText.slice(2).trim();
-        if (!content) {
-          lineDiv.innerHTML = '<br>';
-          setCursorAt(lineDiv, 0);
-        } else {
-          const nd = document.createElement('div');
-          nd.textContent = '• ';
-          lineDiv.after(nd);
-          const tn = nd.firstChild;
-          if (tn) setCursorAt(tn, 2);
-        }
-      } else if (/^\d+\.\s/.test(lineText)) {
-        const match = lineText.match(/^(\d+)\.\s/);
-        const content = lineText.slice(match[0].length).trim();
-        if (!content) {
-          lineDiv.innerHTML = '<br>';
-          setCursorAt(lineDiv, 0);
-        } else {
-          const num = parseInt(match[1], 10);
-          const nd = document.createElement('div');
-          nd.textContent = `${num + 1}. `;
-          lineDiv.after(nd);
-          const tn = nd.firstChild;
-          if (tn) setCursorAt(tn, tn.textContent.length);
-        }
+      const bullet = parseBullet(lineText);
+      const numberedMatch = !bullet ? lineText.match(/^(\d+)\.\s/) : null;
+      const prefix = bullet ? lineText.slice(0, bullet.prefixLength) : (numberedMatch ? numberedMatch[0] : '');
+
+      // Pressing Enter on an empty list line exits the list instead of continuing it
+      if (prefix && lineText.slice(prefix.length).trim() === '') {
+        lineDiv.innerHTML = '<br>';
+        setCursorAt(lineDiv, 0);
+        emit();
+        return;
+      }
+
+      // Split the line at the cursor: text before stays, text after moves to
+      // a new line below (inheriting the bullet/number, at the same nesting
+      // level, if this was a list line)
+      const rawOffset = getCursorOffsetInLine(lineDiv);
+      const offset = Math.max(rawOffset ?? lineText.length, prefix.length);
+      const beforeText = lineText.slice(0, offset);
+      const afterText = lineText.slice(offset);
+      const nextPrefix = bullet ? `${bullet.indent}${bullet.marker} ` : (numberedMatch ? `${parseInt(numberedMatch[1], 10) + 1}. ` : '');
+      const newLineText = nextPrefix + afterText;
+
+      if (beforeText) {
+        lineDiv.textContent = beforeText;
       } else {
-        const nd = document.createElement('div');
+        lineDiv.innerHTML = '<br>';
+      }
+
+      const nd = document.createElement('div');
+      if (newLineText) {
+        nd.textContent = newLineText;
+      } else {
         nd.innerHTML = '<br>';
-        lineDiv.after(nd);
+      }
+      lineDiv.after(nd);
+
+      if (newLineText) {
+        setCursorAt(nd.firstChild, nextPrefix.length);
+      } else {
         setCursorAt(nd, 0);
       }
 
@@ -128,8 +158,42 @@ export default function RichTextArea({ value, onChange, placeholder, minHeight =
       return;
     }
 
+    if (e.key === 'Tab') {
+      const bullet = parseBullet(lineText);
+      if (!bullet) return; // only bullet lines support nesting; let Tab behave normally elsewhere
+      e.preventDefault();
+
+      const newLevel = bullet.level + (e.shiftKey ? -1 : 1);
+      if (newLevel < 0) return; // already at the top level
+
+      const content = lineText.slice(bullet.prefixLength);
+      const newIndent = INDENT_UNIT.repeat(newLevel);
+      const newMarker = BULLET_CHARS[Math.min(newLevel, BULLET_CHARS.length - 1)];
+      lineDiv.textContent = `${newIndent}${newMarker} ${content}`;
+      setCursorAt(lineDiv.firstChild, lineDiv.textContent.length);
+      emit();
+      return;
+    }
+
     if (e.key === 'Backspace') {
-      if (lineText === '• ' || /^\d+\.\s$/.test(lineText)) {
+      const bullet = parseBullet(lineText);
+      if (bullet && lineText.slice(bullet.prefixLength).trim() === '') {
+        e.preventDefault();
+        if (bullet.level > 0) {
+          // Empty nested bullet: outdent one level instead of clearing it entirely
+          const newLevel = bullet.level - 1;
+          const newIndent = INDENT_UNIT.repeat(newLevel);
+          const newMarker = BULLET_CHARS[Math.min(newLevel, BULLET_CHARS.length - 1)];
+          lineDiv.textContent = `${newIndent}${newMarker} `;
+          setCursorAt(lineDiv.firstChild, lineDiv.textContent.length);
+        } else {
+          lineDiv.innerHTML = '<br>';
+          setCursorAt(lineDiv, 0);
+        }
+        emit();
+        return;
+      }
+      if (/^\d+\.\s$/.test(lineText)) {
         e.preventDefault();
         lineDiv.innerHTML = '<br>';
         setCursorAt(lineDiv, 0);
