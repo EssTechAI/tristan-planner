@@ -5,18 +5,11 @@ import DayModal from '../components/DayModal';
 import TaskModal from '../components/TaskModal';
 import { loadWeekData, saveWeekData, defaultWeekData } from '../utils/storage';
 import { useAuth } from '../context/useAuth';
-import { getDatesForWeek, getTodayInfo, formatDate, MONTH_NAMES } from '../utils/calendarUtils';
+import {
+  getDatesForWeek, getTodayInfo, formatDate, MONTH_NAMES,
+  DAYS, DAY_COLORS, toISODate,
+} from '../utils/calendarUtils';
 
-const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const DAY_COLORS = {
-  MON: '#ff5c5c',
-  TUE: '#4e9af1',
-  WED: '#7c5cbf',
-  THU: '#ff9d3d',
-  FRI: '#2ecc71',
-  SAT: '#ec6fae',
-  SUN: '#3dbfad',
-};
 const DEFAULT_QUOTE = 'What will I do, by when, and what is my reward?';
 
 function loadQuote() {
@@ -35,10 +28,14 @@ function newTodo() {
     description: '',
     subtasks: [],
     assignedDay: null,
+    createdAt: new Date().toISOString(),
   };
 }
 
-export default function WeeklyPlanner({ weekNumber, weekYear }) {
+export default function WeeklyPlanner({
+  weekNumber, weekYear,
+  backlogTodos = [], onSendToBacklog, onUpdateBacklogTodo, onOpenBacklogDetail,
+}) {
   const { user } = useAuth();
   const [data, setData] = useState(defaultWeekData);
   const dates = getDatesForWeek(weekNumber, weekYear);
@@ -114,6 +111,11 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
     const todos = [...data.todos, todo];
     update({ ...data, todos });
     return todos.filter(t => !t.done).length - 1;
+  };
+
+  const sendToBacklog = (todo) => {
+    onSendToBacklog?.(todo);
+    update({ ...data, todos: data.todos.filter(t => t.id !== todo.id) });
   };
 
   // --- Reminders ---
@@ -264,6 +266,18 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                 ))}
               </select>
               <button
+                onClick={() => sendToBacklog(t)}
+                title="Send to backlog"
+                className="task-detail-arrow opacity-100 flex-shrink-0 bg-transparent border-0 cursor-pointer p-0 transition-opacity"
+                style={{ color: '#9b9eb0', lineHeight: 1 }}
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <rect x="1.5" y="4" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M1 2.5h11v2H1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M5 6.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </button>
+              <button
                 onClick={() => setTaskModalId(t.id)}
                 title="Open task details"
                 className="task-detail-arrow opacity-100 flex-shrink-0 bg-transparent border-0 cursor-pointer p-0 transition-opacity"
@@ -342,6 +356,8 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
           {DAYS.map((day, i) => {
             const isToday = isTodayIndex(i);
             const dayTodos = data.todos.filter(t => t.assignedDay === day);
+            const dayISO = toISODate(dates[i]);
+            const dayBacklogTodos = backlogTodos.filter(t => t.assignedDate === dayISO);
             return (
               <div
                 key={day}
@@ -376,6 +392,55 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                               className="text-[11px] truncate cursor-pointer hover:font-semibold"
                               title={`${t.text} — tap for details`}
                               onClick={() => setTaskModalId(t.id)}
+                              style={{
+                                color: t.done ? '#9b9eb0' : '#3d3f4e',
+                                textDecoration: t.done ? 'line-through' : 'none',
+                              }}
+                            >
+                              {t.text}
+                            </span>
+                          </div>
+                          {visibleSubtasks.length > 0 && (
+                            <div className="pl-[18px] mt-0.5">
+                              {visibleSubtasks.map(s => (
+                                <div
+                                  key={s.id}
+                                  className="text-[10px] truncate"
+                                  title={s.text}
+                                  style={{
+                                    color: s.done ? '#c4c7d5' : '#9b9eb0',
+                                    textDecoration: s.done ? 'line-through' : 'none',
+                                  }}
+                                >
+                                  • {s.text}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {dayBacklogTodos.length > 0 && (
+                  <div className="mb-2" onClick={e => e.stopPropagation()}>
+                    {dayBacklogTodos.map(t => {
+                      const visibleSubtasks = (t.subtasks || []).filter(s => s.text.trim() !== '');
+                      return (
+                        <div key={t.id} className="mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="checkbox"
+                              checked={t.done}
+                              onChange={() => onUpdateBacklogTodo?.({ ...t, done: !t.done, status: !t.done ? 'done' : 'not_started' })}
+                              className="flex-shrink-0 w-[12px] h-[12px] cursor-pointer accent-[#4e9af1]"
+                              title="From your backlog"
+                            />
+                            <span
+                              className="text-[11px] truncate cursor-pointer hover:font-semibold"
+                              title={`${t.text} — from backlog, tap for details`}
+                              onClick={() => onOpenBacklogDetail?.(t.id)}
                               style={{
                                 color: t.done ? '#9b9eb0' : '#3d3f4e',
                                 textDecoration: t.done ? 'line-through' : 'none',

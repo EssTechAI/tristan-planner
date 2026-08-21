@@ -50,7 +50,19 @@ Unique on `(user_id, year, month_index)`.
 
 Unique on `(user_id, week_year, week_number)`.
 
-Both tables: RLS enabled, single `for all` policy scoped to `auth.uid() = user_id`.
+### `backlog_todos` — one row per task, independent of any week
+| Column | Type | Notes |
+|---|---|---|
+| `user_id` | uuid | FK to `auth.users`, RLS key |
+| `text`, `done`, `status`, `description`, `subtasks` | text/bool/jsonb | Same shape as a weekly to-do |
+| `assigned_date` | date, nullable | `null` = sitting in the general backlog. Once set to a real date, the item shows in that day's box on that specific week's page — and only that week, since a literal date only ever falls in one week. |
+| `created_at` | timestamptz | Also added to weekly to-dos (as a plain field inside the `weekly_data.todos` jsonb) — shown in the task detail popup for both. |
+
+A backlog item's day-of-week and color tag are derived straight from `assigned_date` (`dayAbbrevForDate` in `calendarUtils.js`) — no separate week-number/day-name fields are stored, since they're always derivable from the date itself.
+
+Once scheduled, a backlog item shows only inside that day's box (not the flat To-Do list) but stays listed in the Backlog panel the whole time, tagged as scheduled — checking it off in either place updates the same row.
+
+All three tables: RLS enabled, single `for all` policy scoped to `auth.uid() = user_id`.
 
 On first login after this change, any data still sitting in the browser's localStorage (old v1 keys) is auto-uploaded once via `migrateLocalStorageToSupabase`, then a flag prevents re-running it.
 
@@ -61,14 +73,21 @@ Free-tier Supabase projects auto-pause after ~7 days of no API activity. `.githu
 ```
 src/
   components/   Sidebar, TopBar, TabBar, SectionCard, MiniCalendar,
-                RichTextArea, DayModal, TaskModal
+                RichTextArea, DayModal, TaskModal, BacklogDrawer
   views/        MonthlyOverview, WeeklyPlanner, Login
   context/      AuthContext.jsx (AuthProvider), useAuth.js (context + hook)
   lib/          supabase.js (Supabase client)
   utils/        calendarUtils.js, storage.js
-  App.jsx       Router + layout shell
+  App.jsx       Router + layout shell, owns backlog state (useBacklog)
   main.jsx
 ```
+
+## Backlog / "To Do" tab
+A third tab next to Monthly/Weekly — not a route, a slide-over panel (Google Calendar style) that toggles open without navigating away, so the currently open week stays visible and usable beside it. Lives at the `AppShell` level in `App.jsx` so it's available on every page. On mobile, where there's no room to show both at once, it takes the full screen instead.
+
+Unscheduled items get a dashed card border; once assigned a date, the border goes solid with a left edge in that day's own color — the same visual language the day-pills already use elsewhere, so the state is readable at a glance without reading text.
+
+A regular weekly to-do can be sent to the backlog (small archive-icon button next to each to-do) for the "didn't get to it this week, deal with it later" workflow — this moves it out of that week's native to-do list into `backlog_todos`, unscheduled.
 
 ## Design Tokens
 - Nav: `#1a1a2e` | Surface: `#ffffff` | BG: `#f7f8fa`

@@ -41,6 +41,7 @@ function defaultTodo() {
     description: '',
     subtasks: [],
     assignedDay: null,
+    createdAt: new Date().toISOString(),
   };
 }
 
@@ -146,6 +147,73 @@ export function saveWeekData(userId, weekYear, weekNumber, data) {
     );
     if (error) console.error('saveWeekData failed', error);
   });
+}
+
+// --- Backlog: tasks not tied to any specific week until assigned a date ---
+
+export function defaultBacklogTodo() {
+  return {
+    id: crypto.randomUUID(),
+    text: '',
+    done: false,
+    status: 'not_started',
+    description: '',
+    subtasks: [],
+    assignedDate: null, // null = sitting in the general backlog, unscheduled
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function normalizeBacklogRow(row) {
+  return {
+    id: row.id,
+    text: row.text,
+    done: row.done,
+    status: row.status,
+    description: row.description || '',
+    subtasks: row.subtasks || [],
+    assignedDate: row.assigned_date,
+    createdAt: row.created_at,
+  };
+}
+
+export async function loadBacklogTodos(userId) {
+  const { data, error } = await supabase
+    .from('backlog_todos')
+    .select('*')
+    .eq('user_id', userId)
+    .order('assigned_date', { ascending: true, nullsFirst: true })
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('loadBacklogTodos failed', error);
+    return [];
+  }
+  return (data || []).map(normalizeBacklogRow);
+}
+
+export function saveBacklogTodo(userId, todo) {
+  const key = `backlog_${todo.id}`;
+  debounced(key, async () => {
+    const { error } = await supabase.from('backlog_todos').upsert({
+      id: todo.id,
+      user_id: userId,
+      text: todo.text,
+      done: todo.done,
+      status: todo.status,
+      description: todo.description,
+      subtasks: todo.subtasks,
+      assigned_date: todo.assignedDate,
+      created_at: todo.createdAt,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) console.error('saveBacklogTodo failed', error);
+  });
+}
+
+export async function deleteBacklogTodo(userId, id) {
+  const { error } = await supabase.from('backlog_todos').delete().eq('id', id).eq('user_id', userId);
+  if (error) console.error('deleteBacklogTodo failed', error);
 }
 
 const MIGRATION_FLAG = 'planner_migrated_to_supabase_v1';

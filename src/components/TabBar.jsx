@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { getWeeksForMonth } from '../utils/calendarUtils';
 
-export default function TabBar({ year, monthIndex, weekNumber, weekYear, view }) {
+export default function TabBar({ year, monthIndex, weekNumber, weekYear, view, backlogOpen, onToggleBacklog }) {
   const navigate = useNavigate();
 
   const goMonthly = () => navigate(`/month/${year}-${monthIndex}`);
@@ -22,6 +22,7 @@ export default function TabBar({ year, monthIndex, weekNumber, weekYear, view })
     <div className="bg-white border-b border-[#e3e5e8] flex items-center px-8 h-11 flex-shrink-0">
       <TabBtn label="Monthly Overview" active={view === 'monthly'} onClick={goMonthly} />
       <TabBtn label="Weekly Planner" active={view === 'weekly'} onClick={goWeekly} />
+      <TabBtn label="To Do" active={backlogOpen} onClick={onToggleBacklog} />
     </div>
   );
 }

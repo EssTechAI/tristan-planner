@@ -8,6 +8,15 @@ const STATUS = {
 };
 const STATUS_ORDER = ['not_started', 'in_progress', 'done'];
 
+function formatCreatedDate(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return null;
+  }
+}
+
 export default function TaskModal({ task, onClose, onUpdate }) {
   const [local, setLocal] = useState(task);
   const subtaskRefs = useRef([]);
@@ -57,7 +66,7 @@ export default function TaskModal({ task, onClose, onUpdate }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.4)', animation: 'fadeIn 0.15s ease-out' }}
       onClick={onClose}
     >
@@ -86,7 +95,7 @@ export default function TaskModal({ task, onClose, onUpdate }) {
             </button>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
             <button
               onClick={cycleStatus}
               className="px-3 py-1 rounded-full text-[12px] font-semibold border-0 cursor-pointer transition-all"
@@ -94,6 +103,11 @@ export default function TaskModal({ task, onClose, onUpdate }) {
             >
               {cfg.label}
             </button>
+            {formatCreatedDate(local.createdAt) && (
+              <span className="text-[11px] text-[#9b9eb0] flex-shrink-0">
+                Created {formatCreatedDate(local.createdAt)}
+              </span>
+            )}
           </div>
 
           <div className="border-b border-[#e8e9ef]" />

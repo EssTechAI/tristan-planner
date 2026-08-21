@@ -13,7 +13,7 @@ export default function DayModal({ isOpen, onClose, dayName, dateLabel, value, o
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.4)', animation: 'fadeIn 0.15s ease-out' }}
       onClick={onClose}
     >

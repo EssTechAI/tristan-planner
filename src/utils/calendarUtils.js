@@ -1,6 +1,38 @@
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 export const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+export const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+export const DAY_COLORS = {
+  MON: '#ff5c5c',
+  TUE: '#4e9af1',
+  WED: '#7c5cbf',
+  THU: '#ff9d3d',
+  FRI: '#2ecc71',
+  SAT: '#ec6fae',
+  SUN: '#3dbfad',
+};
+
+// Plain YYYY-MM-DD in the local timezone (not UTC) — for storing/comparing
+// calendar dates without the classic off-by-one-day bug that toISOString()
+// or `new Date("2026-08-22")` can cause depending on the browser's timezone.
+export function toISODate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export function fromISODate(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function dayAbbrevForDate(date) {
+  const jsDay = date.getDay(); // 0=Sun..6=Sat
+  return DAYS[jsDay === 0 ? 6 : jsDay - 1]; // MON=0..SUN=6
+}
+
 function getISOWeekData(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
