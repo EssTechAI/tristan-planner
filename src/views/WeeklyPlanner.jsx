@@ -373,7 +373,7 @@ export default function WeeklyPlanner({ weekNumber, weekYear }) {
                               className="flex-shrink-0 w-[12px] h-[12px] cursor-pointer accent-[#7c5cbf]"
                             />
                             <span
-                              className="text-[11px] truncate cursor-pointer hover:underline"
+                              className="text-[11px] truncate cursor-pointer hover:font-semibold"
                               title={`${t.text} — tap for details`}
                               onClick={() => setTaskModalId(t.id)}
                               style={{
